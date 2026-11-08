@@ -30,7 +30,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
       ros-humble-ros-base python3-rosdep python3-colcon-common-extensions python3-vcstool && \
     rosdep init && rm -rf /var/lib/apt/lists/* && \
     printf '%s\n' 'source /opt/ros/humble/setup.bash' > /etc/profile.d/ros.sh && \
-    echo 'source /etc/profile.d/ros.sh' >> /etc/bash.bashrc
+    sed -i '1i source /etc/profile.d/ros.sh' /etc/bash.bashrc
 ENV USER=ubuntu IMAGE_DESKTOP=0
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh && rm -f /etc/ssh/ssh_host_* /etc/machine-id /var/lib/dbus/machine-id

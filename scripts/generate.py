@@ -79,9 +79,12 @@ RUN curl -fsSL --retry 3 https://packages.mozilla.org/apt/repo-signing-key.gpg -
 '''
     if ros:
         if distro in ("melodic", "noetic"):
+            # Bionic's GnuPG 2.2.4 predates --show-keys.
+            inspect_key = ("gpg --with-colons --import-options show-only --import" if version == "18.04"
+                           else "gpg --show-keys --with-colons")
             text += f'''# Same final snapshot and signing key as the official ROS Docker images.
 RUN curl -fsSL --retry 3 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA' -o /tmp/ros.asc && \\
-    gpg --show-keys --with-colons /tmp/ros.asc | grep -q 'fpr:::::::::4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA:' && \\
+    {inspect_key} /tmp/ros.asc | grep -q 'fpr:::::::::4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA:' && \\
     gpg --dearmor < /tmp/ros.asc > /usr/share/keyrings/ros1-snapshots.gpg && rm /tmp/ros.asc && \\
     echo 'deb [signed-by=/usr/share/keyrings/ros1-snapshots.gpg] http://snapshots.ros.org/{distro}/final/ubuntu {codename} main' > /etc/apt/sources.list.d/ros1.list
 '''
@@ -100,7 +103,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
       {packages} && \\
     rosdep init && rm -rf /var/lib/apt/lists/* && \\
     printf '%s\\n' 'source /opt/ros/{distro}/setup.bash' > /etc/profile.d/ros.sh && \\
-    echo 'source /etc/profile.d/ros.sh' >> /etc/bash.bashrc
+    sed -i '1i source /etc/profile.d/ros.sh' /etc/bash.bashrc
 '''
     text += f'''ENV USER=ubuntu IMAGE_DESKTOP={int(desktop)}
 COPY entrypoint.sh /entrypoint.sh

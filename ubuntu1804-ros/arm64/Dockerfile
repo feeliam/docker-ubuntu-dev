@@ -26,7 +26,7 @@ RUN printf '%s\n' \
     mkdir -p /workspace && chmod 1777 /workspace
 # Same final snapshot and signing key as the official ROS Docker images.
 RUN curl -fsSL --retry 3 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA' -o /tmp/ros.asc && \
-    gpg --show-keys --with-colons /tmp/ros.asc | grep -q 'fpr:::::::::4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA:' && \
+    gpg --with-colons --import-options show-only --import /tmp/ros.asc | grep -q 'fpr:::::::::4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA:' && \
     gpg --dearmor < /tmp/ros.asc > /usr/share/keyrings/ros1-snapshots.gpg && rm /tmp/ros.asc && \
     echo 'deb [signed-by=/usr/share/keyrings/ros1-snapshots.gpg] http://snapshots.ros.org/melodic/final/ubuntu bionic main' > /etc/apt/sources.list.d/ros1.list
 ENV ROS_DISTRO=melodic ROS_VERSION=1 ROS_PYTHON_VERSION=2
@@ -34,7 +34,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
       ros-melodic-ros-base python-rosdep python-rosinstall python-vcstools python-catkin-tools && \
     rosdep init && rm -rf /var/lib/apt/lists/* && \
     printf '%s\n' 'source /opt/ros/melodic/setup.bash' > /etc/profile.d/ros.sh && \
-    echo 'source /etc/profile.d/ros.sh' >> /etc/bash.bashrc
+    sed -i '1i source /etc/profile.d/ros.sh' /etc/bash.bashrc
 ENV USER=ubuntu IMAGE_DESKTOP=0
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh && rm -f /etc/ssh/ssh_host_* /etc/machine-id /var/lib/dbus/machine-id

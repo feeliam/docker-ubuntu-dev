@@ -33,7 +33,7 @@ Intel/AMD 主机将 `--arch arm64` 改成 `--arch amd64`，对应容器名也改
 
 打开 **http://localhost:6080/vnc.html?resize=remote**，连接密码为 `ubuntu`。桌面中可打开 Firefox。
 
-按本次要求，仅对 **22.04 base arm64** 完成最终构建和运行验收；其他变体提供完整文件及文档，尚未完成最终运行验收。详见 [验证记录](docs/validation.md)。
+已对 **22.04 base arm64** 和 **18.04 desktop-ros arm64** 完成构建和运行验收；18.04 使用临时网络适配上下文构建，其余组合尚未完成最终运行验收。详见 [验证记录](docs/validation.md)。
 
 普通命令行镜像：
 

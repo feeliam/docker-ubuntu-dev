@@ -1,8 +1,25 @@
 # 验证记录
 
-验证日期：2026-10-28（Asia/Shanghai）。根据最终要求，仅对 **Ubuntu 22.04 / base / arm64** 完成本轮构建及运行验收，其余镜像维护 Dockerfile、入口脚本、使用文档和测试接口，不继续构建。
+最新验证日期：2026-11-08（Asia/Shanghai）。已验证 **Ubuntu 18.04 / desktop-ros / arm64**；保留此前 2026-10-28 的 **Ubuntu 22.04 / base / arm64** 验收记录。
 
-## 实际构建与运行
+## 2026-11-08：18.04 / desktop-ros / arm64
+
+镜像：`ubuntu-dev:18.04-desktop-ros-arm64`，平台 `linux/arm64`，镜像 ID：`sha256:a9d181339f130e96ff4c98ec096c80ec71bb31b415057af0c79134603c54e937`。
+
+原始构建遇到 HTTP 502 和 GitHub TLS/连接故障。本轮使用 `.test-results/18.04-desktop-ros-arm64-build/` 临时上下文：Ubuntu 软件源切换至中科大 HTTPS 镜像，以宿主机可信 CA 引导；Tini 预先下载并核对仓库固定 SHA-256；rosdep 默认源列表通过 GitHub 官方 API 获取并校验 Git blob 标识；ROS 软件包仍来自官方 Melodic 最终快照并保留签名校验。构建期间使用的本机临时转发已关闭。此结果验证该镜像的运行功能，不代表原始下载通路已恢复。
+
+同步修复生成脚本中 Bionic GPG 不支持 `--show-keys` 的问题，并将 ROS Bash 初始化移至交互判断之前，使非交互 SSH 命令也能加载 ROS。桌面验收补充 WebSocket `binary` 子协议，Firefox 改用本地 HTML 测试页。
+
+```bash
+NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 \
+  ./scripts/smoke-test.sh --ubuntu 18.04 --variant desktop-ros --arch arm64 --skip-build
+```
+
+结果：**PASS**，共 11 组检查。涵盖架构、密码/公钥 SSH、编译工具、Python、sudo、ROS 工作空间编译与消息发布订阅、MATE/noVNC/WebSocket/VNC 密码认证、Firefox 和 RViz 窗口、重启持久化、自定义用户与绑定目录、独立 SSH 主机密钥以及命令退出码。测试容器和卷已清理，保留镜像。
+
+构建日志为 `.test-results/18.04-desktop-ros-arm64-build.log`，运行日志为 `.test-results/18.04-desktop-ros-arm64.log`，汇总为 `.test-results/summary.json`。24 组生成文件一致性、现有 8 项单元检查和 `git diff --check` 均通过。
+
+## 2026-10-28：22.04 / base / arm64
 
 镜像：`ubuntu-dev:22.04-base-arm64`。构建平台为 Docker Desktop Linux arm64。
 
@@ -39,7 +56,7 @@ git diff --check
 
 ## 验收边界
 
-其余 23 个组合未完成最终运行验收。MATE/noVNC、Firefox、ROS 工作空间和通信、RViz、amd64 模拟运行均不列为已通过。
+除上述两个组合外，其余 22 个组合未完成最终运行验收。MATE/noVNC、Firefox、ROS 工作空间和通信、RViz 仅在 18.04 desktop-ros arm64 完成验证；其他组合及 amd64 模拟运行不列为已通过。
 
 在范围收窄前曾完成 18.04 base arm64 的早期构建测试，并启动 22.04 桌面 arm64、base amd64 构建；后两者已按要求取消，早期结果不代替当前文件的最终验收。
 

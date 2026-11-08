@@ -201,15 +201,18 @@ touch ~/persistent-marker
                 # Check the actual websocket upgrade, not merely the static noVNC HTML.
                 with socket.create_connection(("127.0.0.1", web_port), timeout=5) as sock:
                     request = ("GET /websockify HTTP/1.1\r\nHost: localhost\r\nUpgrade: websocket\r\n"
-                               "Connection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: "
+                               "Connection: Upgrade\r\nSec-WebSocket-Protocol: binary\r\n"
+                               "Sec-WebSocket-Version: 13\r\nSec-WebSocket-Key: "
                                + base64.b64encode(os.urandom(16)).decode() + "\r\n\r\n")
                     sock.sendall(request.encode())
                     assert b"101" in sock.recv(4096).split(b"\r\n")[0]
                 wait_for(lambda: "mate-session" in run("docker", "exec", name, "pgrep", "-a", "mate-session"))
                 run("docker", "exec", "-i", name, "python3", "-", input=VNC_CHECK)
                 result["checks"].append("mate-novnc-websocket-vnc-auth")
+                run("docker", "exec", "-i", name, "tee", "/tmp/ubuntu-browser-smoke.html",
+                    input="<title>Ubuntu browser smoke</title><h1>OK</h1>\n")
                 run("docker", "exec", "-d", "--user", "ubuntu", "-e", "HOME=/home/ubuntu", "-e", "DISPLAY=:1",
-                    name, "firefox", "--no-remote", "--new-window", "data:text/html,<title>Ubuntu browser smoke</title><h1>OK</h1>")
+                    name, "firefox", "--no-remote", "--new-window", "file:///tmp/ubuntu-browser-smoke.html")
                 wait_for(lambda: "Ubuntu browser smoke" in run("docker", "exec", "--user", "ubuntu",
                     "-e", "HOME=/home/ubuntu", "-e", "DISPLAY=:1", name, "xwininfo", "-root", "-tree"), timeout=120)
                 result["checks"].append("firefox-window")
